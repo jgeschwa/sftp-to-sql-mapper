@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres
+    container_name: database
+    restart: always
+    ports:
+      - "8090:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user
+    volumes:
+      - local_pgdata:/var/lib/postgresql/data
+    networks:
+      - postgres
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "8091:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@example.com
+      PGADMIN_DEFAULT_PASSWORD: user
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - postgres
+  sftp:
+    image: atmoz/sftp
+    ports:
+      - "8092:22"
+    command: foo:pass:::upload
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  local_pgdata:
+  pgadmin-data:
