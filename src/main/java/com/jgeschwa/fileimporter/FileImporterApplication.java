@@ -5,18 +5,17 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.InboundChannelAdapter;
-import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.core.MessageSource;
-import org.springframework.integration.file.filters.AcceptAllFileListFilter;
 import org.springframework.integration.file.remote.session.CachingSessionFactory;
 import org.springframework.integration.file.remote.session.SessionFactory;
 import org.springframework.integration.handler.advice.ExpressionEvaluatingRequestHandlerAdvice;
+import org.springframework.integration.metadata.SimpleMetadataStore;
+import org.springframework.integration.sftp.filters.SftpPersistentAcceptOnceFileListFilter;
 import org.springframework.integration.sftp.inbound.SftpStreamingMessageSource;
 import org.springframework.integration.sftp.session.DefaultSftpSessionFactory;
 import org.springframework.integration.sftp.session.SftpRemoteFileTemplate;
 import org.springframework.integration.transformer.StreamTransformer;
-import org.springframework.messaging.MessageHandler;
 
 import java.io.InputStream;
 
@@ -43,7 +42,9 @@ public class FileImporterApplication {
     public MessageSource<InputStream> ftpMessageSource() {
         SftpStreamingMessageSource messageSource = new SftpStreamingMessageSource(template());
         messageSource.setRemoteDirectory("upload/");
-        messageSource.setFilter(new AcceptAllFileListFilter<>());
+        messageSource.setFilter(new SftpPersistentAcceptOnceFileListFilter(
+                new SimpleMetadataStore(), after().getComponentName())
+        );
         messageSource.setMaxFetchSize(1);
         return messageSource;
     }
@@ -57,12 +58,6 @@ public class FileImporterApplication {
     @Bean
     public SftpRemoteFileTemplate template() {
         return new SftpRemoteFileTemplate(sftpSessionFactory());
-    }
-
-    @ServiceActivator(inputChannel = "data", adviceChain = "after")
-    @Bean
-    public MessageHandler handle() {
-        return System.out::println;
     }
 
     @Bean
