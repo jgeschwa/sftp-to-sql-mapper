@@ -1,6 +1,6 @@
 package com.jgeschwa.fileimporter.database.repository;
 
-import com.jgeschwa.fileimporter.model.Person;
+import com.jgeschwa.fileimporter.model.entity.Person;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
