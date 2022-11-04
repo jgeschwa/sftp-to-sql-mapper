@@ -1,6 +1,8 @@
 package com.jgeschwa.fileimporter.service;
 
 import com.jgeschwa.fileimporter.database.repository.PersonRepository;
+import com.jgeschwa.fileimporter.mapper.PersonMapper;
+import com.jgeschwa.fileimporter.model.dto.PersonDto;
 import com.jgeschwa.fileimporter.model.entity.Person;
 import com.jgeschwa.fileimporter.utils.JsonConverter;
 import com.jgeschwa.fileimporter.utils.XmlConverter;
@@ -16,14 +18,16 @@ import java.util.UUID;
 @Slf4j
 public class PersonService {
 
-    private final PersonRepository personRepository;
+    private final PersonRepository repository;
+    private final PersonMapper mapper;
 
-    public PersonService(PersonRepository personRepository) {
-        this.personRepository = personRepository;
+    public PersonService(PersonRepository personRepository, PersonMapper mapper) {
+        this.repository = personRepository;
+        this.mapper = mapper;
     }
 
     public void doImport(String content) {
-        personRepository.deleteAll();
+        repository.deleteAll();
         List<Person> personList;
         if (content.charAt(0) == '<') {
             personList = XmlConverter.convertList(content, List.class, Person.class);
@@ -32,13 +36,13 @@ public class PersonService {
             personList = JsonConverter.convertList(content, List.class, Person.class);
             log.info("Json converting done");
         }
-        personRepository.saveAll(personList);
+        repository.saveAll(personList);
     }
 
-    public Person getById(UUID uuid) {
-        return personRepository.findById(uuid).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Person with id "+ uuid + " not found")
-        );
+    public PersonDto getById(UUID uuid) {
+        return mapper.mapToDto(repository.findById(uuid).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Person with id "+ uuid + " was not found")
+        ));
     }
 
 }
